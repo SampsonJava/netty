@@ -447,7 +447,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                         continue;
 
                     case SelectStrategy.BUSY_WAIT:
-                        // fall-through to SELECT since the busy-wait is not supported with NIO
+                         // fall-through to SELECT since the busy-wait is not supported with NIO
 
                     case SelectStrategy.SELECT:
                         long curDeadlineNanos = nextScheduledTaskDeadlineNanos();
@@ -457,6 +457,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                         nextWakeupNanos.set(curDeadlineNanos);
                         try {
                             if (!hasTasks()) {
+                                // 处理事件
                                 strategy = select(curDeadlineNanos);
                             }
                         } finally {
@@ -581,6 +582,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
 
     private void processSelectedKeys() {
         if (selectedKeys != null) {
+            // 不用JDK的selector.selectedKeys(),性能更好(1%~2%),垃圾回收更少
             processSelectedKeysOptimized();
         } else {
             processSelectedKeysPlain(selector.selectedKeys());
@@ -673,7 +675,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
         }
     }
 
-    private void processSelectedKey(SelectionKey k, AbstractNioChannel ch) {
+    private void  processSelectedKey(SelectionKey k, AbstractNioChannel ch) {
         final AbstractNioChannel.NioUnsafe unsafe = ch.unsafe();
         if (!k.isValid()) {
             final EventLoop eventLoop;
@@ -719,6 +721,8 @@ public final class NioEventLoop extends SingleThreadEventLoop {
             // Also check for readOps of 0 to workaround possible JDK bug which may otherwise lead
             // to a spin loop
             if ((readyOps & (SelectionKey.OP_READ | SelectionKey.OP_ACCEPT)) != 0 || readyOps == 0) {
+                // 接收请求进入AbstractNioMessageChannel#read();
+                // 接收数据进入AbstractNioByteChannel#read();
                 unsafe.read();
             }
         } catch (CancelledKeyException ignored) {

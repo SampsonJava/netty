@@ -65,6 +65,7 @@ final class SelectedSelectionKeySetSelector extends Selector {
     @Override
     public int select() throws IOException {
         selectionKeys.reset();
+        // 处理事件
         return delegate.select();
     }
 
